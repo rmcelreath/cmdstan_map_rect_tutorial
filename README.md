@@ -119,7 +119,7 @@ By default, the output file is called `output.csv`. You'll want to go back into 
 library(rstan)
 m0 <- read_stan_csv("output.csv")
 ```
-Now you can procede as usual to work with the samples.
+Now you can proceed as usual to work with the samples.
 
 ## Rewriting the Model to Enable Multithreading
 
