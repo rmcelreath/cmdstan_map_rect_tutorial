@@ -156,27 +156,27 @@ transformed data {
   }
 }
 ```
-The way that shards work is that we have to pack all of the variables particular to each shard into three vectors: a vector of integer data, a vector of real (continuous) data, and a vector of parameters. I'm going to call the vector of integers `xi`, the vector of reals `xr`, and the vector of parameters `theta`. 
+The way that shards work is that we have to pack all of the variables particular to each shard into three arrays: an array of integer data, an array of real (continuous) data, and an array of parameters. I'm going to call the array of integers `xi`, the array of reals `xr`, and the array of parameters `theta`. 
 
-First, consider the vector of reals, `xr`. It's the simplest. We need to pack into this the `rating` values. So we define:
+First, consider the array of reals, `xr`. It's the simplest. We need to pack into this the `rating` values. So we define:
 ```
 real xr[n_shards, M];
 ```
 The value `M` is just the number of dyads per shard. Then in the loop at the bottom of the block, we pack in the `rating` values from each shard, iterating over the indexes.
 
-The vector of integers is slightly harder. We have two integer variables to pack in: `n_redcards` and `n_games`. But these need to be stacked together in a single vector. The code above defines therefore:
+The array of integers is slightly harder. We have two integer variables to pack in: `n_redcards` and `n_games`. But these need to be stacked together in a single vector. The code above defines therefore:
 ```
 int xi[n_shards, 2*M];
 ```
 Each row of `xi` is twice as long as `xr`, because we need two variables. These get packed in the loop at the bottom. We will unpack them later.
 
-The vector of parameters work the same way. But in this example, it is super easy. There are no parameters special to each shard, because the parameters are global (no varying effects, for example). So we can just define a zero-length vector for each shard:
+The array of parameters works the same way. But in this example, it is super easy. There are no parameters special to each shard, because the parameters are global (no varying effects, for example). So we can just define a zero-length array for each shard:
 ```
 vector[0] theta[n_shards];
 ```
-If there were actually parameters to pack in here, we'd define them and in either the `parameters` or `transformed parameters` block.
+If there were actually parameters to pack in here, we'd define them in either the `parameters` or `transformed parameters` block.
 
-Hopefully that explains the shard construction. Your data will need their own packing, but the principles are the same: You have 
+Hopefully that explains the shard construction. Your data will need their own packing, but the principles are the same. 
 
 ### Using map_rect
 
