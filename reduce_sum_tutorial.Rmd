@@ -232,23 +232,21 @@ Save this as `redcard/logistic1.stan`.
 
 ## Running the Multithreaded Model
 
-### Configuring Cmdstan
-
 Now we're almost ready to go. First, make sure threading support is enabled in cmdstan (instructions [here](https://github.com/stan-dev/math/wiki/Threading-Support)). That basically means adding:
 
-```
+```bash
 STAN_THREADS=true
 ```
 
 to `make/local`. If this was not set, before building the model, clean your install with a:
 
-```
+```bash
 make clean-all
 ```
 
 and then build it again using:
 
-```
+```bash
 make -j4 build
 ```
 
