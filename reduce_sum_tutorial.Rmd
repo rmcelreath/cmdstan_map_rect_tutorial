@@ -38,11 +38,7 @@ Modifying a Stan model for use with `reduce_sum` has three steps.
 
 (3) Configure your compiler to enable multithreading. Then you can compile and sample as usual.
 
-In the rest of this tutorial, we'll first build the model frist without and then with `reduce_sum`.
-
-[EDIT: Does Windows work with threading yet?]
-
-If you use Windows, it looks like multithreading isn't working yet (see <https://github.com/stan-dev/math/wiki/Threading-Support>). So flip over to a Linux partition, if you have one. If you don't, hope is that an upcoming update to RTools will make things work.
+In the rest of this tutorial, we'll first build the model first without and then with `reduce_sum`.
 
 ## Prepping the data
 
@@ -252,17 +248,17 @@ make -j4 build
 
 (setting the argument to `j` equal to the number of cores you want to build in parallel with)
 
-### Build and Run
+To build the new model:
 
 ```bash
-make redcards/logistic0
+make redcards/logistic1
 ```
 
-To sample from the model:
+To sample from the new model:
 
 ```bash
 cd redcard
-time STAN_NUM_THREADS=8 ./logistic0 sample data file=redcard_input.R
+time STAN_NUM_THREADS=8 ./logistic1 sample data file=redcard_input.R
 ```
 
 The environment variable `STAN_NUM_THREADS` defines how many threads to use for this calculation. On this computer I have 8-cores, and so I choose to use 8 threads.
