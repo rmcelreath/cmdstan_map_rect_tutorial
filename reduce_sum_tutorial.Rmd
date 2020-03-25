@@ -19,7 +19,10 @@ features that make it easier to use parallelism.
 The main advantages to `reduce_sum` are:
 
 1. `reduce_sum` has a more flexible argument interface, avoiding the packing and unpacking that was necessary with `map_rect`.
-2. `reduce_sum` partitions the data for parallelization automatically.
+2. `reduce_sum` partitions the data for parallelization automatically
+   such that the sharding pattern is chosen automatically.
+3. `reduce_sum` allows to take advantage of fast vectorized
+   expressions easily.
 
 The drawbacks to `reduce_sum` are:
 
@@ -32,7 +35,7 @@ This tutorial will highlight these advantages on a simple logistic regression us
 
 Modifying a Stan model for use with `reduce_sum` has three steps.
 
-(1) Identify the portion of the model that you want to parallelize. `reduce_sum` is design specifically for speeding up log likelihood evaluations that are composed of a number of conditionally independent terms that can be computed in parallel then added together.
+(1) Identify the portion of the model that you want to parallelize. `reduce_sum` is designed specifically for speeding up log likelihood evaluations that are composed of a number of conditionally independent terms that can be computed in parallel then added together.
 
 (2) Write a reduce function that can compute a given number of terms that must be added together. Pass this function (and other necessary arguments) to a call to `reduce_sum`.
 
@@ -141,12 +144,14 @@ for(n in 1:N) {
 }
 ```
 
-Now it is clear that the calculation is the sum of a number of conditionally
-independent Bernoulli log probability statements, which is the condition where
-`reduce_sum` is useful.
+Now it is clear that the calculation is the sum of a number of
+conditionally independent Bernoulli log probability statements. So
+whenever we need to calculate a large sum where each term is
+independent of all others and associativity holds, then `reduce_sum`
+is useful.
 
-To use `reduce_sum`, a function must be written that can be used to compute
-arbitrary subsets of the sums.
+To use `reduce_sum`, a function must be written that can be used to
+compute arbitrary partial sums out of the entire large sum.
 
 Using the reducer interface defined in [Reduce-Sum](#reduce-sum), such a function
 can be written like:
@@ -165,7 +170,13 @@ functions {
 }
 ```
 
-And the likelihood statement in the model can now be written:
+The first three arguments of the reducer function must always be
+present. These encode the start and end index of the partial sum as
+well as a slice of the entire data over which the reduction is to
+be performed. Any additional arguments are optional. These optional
+arguments are shared (read-only) among all computations.
+
+Thus, the likelihood statement in the model can now be written:
 
 ```
 target += reduce_func(1, N, n_redcards, n_games, x, beta); // Sum terms 1 to N in the likelihood
@@ -190,9 +201,10 @@ target += reduce_sum(reduce_func, n_redcards, grainsize,
 
 `reduce_sum` automatically breaks the sum into roughly `grainsize` sized pieces
 and computes them in parallel. `grainsize = 1` specifies that the grainsize should
-be estimated automatically.
+be estimated automatically, which is recommended to use as a starting
+point for all analyses.
 
-Making grainsize data (this makes it convenient to find a good one), the final model
+Making `grainsize` data (this makes it convenient to find a good one), the final model
 should look like:
 ```
 functions {
@@ -271,7 +283,20 @@ user	2m15.234s
 sys	0m0.783s
 ```
 
-This gives roughly a 7x speedup. This model was particularly easy to parallelize because a lot of the arguments are data (and do not need to be autodiffed). If a model has a large number of arguments that are either defined in the parameters block, transformed parameters block, or model block, or do not do very much computation inside the reduce function, the speedup will be much more limited.
+This gives roughly a 7x speedup. This model was particularly easy to
+parallelize because a lot of the arguments are data (and do not need
+to be autodiffed). If a model has a large number of arguments that are
+either defined in the parameters block, transformed parameters block,
+or model block, or do not do very much computation inside the reduce
+function, the speedup will be much more limited.
+
+In case you turn this into a multi-level model where you introduce
+groups of data for which you fit group specific parameters, then it is
+often helpful to perform the slicing over the groups and use as
+slicing argument of `reduce_sum` the group parameters themselves. This
+leads to a more efficient parallelization, since the sliced argument
+only gets doubled in memory while the shared arguments will be copied
+as many times as there are splits of the large sum.
 
 ## More
 
