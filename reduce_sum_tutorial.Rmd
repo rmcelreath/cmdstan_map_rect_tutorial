@@ -149,9 +149,11 @@ for(n in 1:N) {
 }
 ```
 
-Now it is clear that the calculation is the sum of a number of conditionally
-independent Bernoulli log probability statements, which is the condition where
-`reduce_sum` is useful.
+Now it is clear that the calculation is the sum of a number of
+conditionally independent Bernoulli log probability statements. So
+whenever we need to calculate a large sum where each term is
+independent of all others and associativity holds, then `reduce_sum`
+is useful.
 
 To use `reduce_sum`, a function must be written that can be used to compute
 arbitrary sections of this sum.
@@ -210,8 +212,8 @@ be estimated automatically (`grainsize` should be left at 1 unless specific test
 are done to
 [pick a different one](https://mc-stan.org/docs/2_23/stan-users-guide/reduce-sum.html#reduce-sum-grainsize)).
 
-Making grainsize data (this makes it convenient to experiment with), the final model
-should look like:
+Making grainsize data (this makes it convenient to experiment with), the final
+model is:
 ```
 functions {
   real reduce_func(int start, int end,
