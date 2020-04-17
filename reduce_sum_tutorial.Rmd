@@ -300,6 +300,20 @@ to check diagnostics. `reduce_sum` is a tool for speeding up single chain
 calculations, which can be useful for model development and on computers with
 large numbers of cores.
 
+We can do a quick check that these two methods are mixing with posterior.
+When parallelizing a model is a good thing to do to make sure something is not
+breaking:
+```{r}
+remotes::install_github("jgabry/posterior")
+library(posterior)
+summarise_draws(bind_draws(fit0$draws(), fit1$draws(), along = "chain"))
+```
+
+Ignoring `lp__` (remember the change to `bernoulli_logit_lpmf` means the
+likelihoods between the two models are only proportional up to a constant), the Rhats
+are less than 1.01, so our basic convergence checks pass. Unless something strange
+is going on, we probably parallelized our model correctly!
+
 ## More Information
 
 For a more detailed description of how `reduce_sum` works, see the
